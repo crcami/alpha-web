@@ -1,0 +1,708 @@
+---
+openapi: 3.1.0
+tags:
+- name: Auth
+- name: Me
+- name: Production
+- name: Products
+- name: Raw Materials
+components:
+  schemas:
+    AuthLoginRequest:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          pattern: \S
+        password:
+          type: string
+          pattern: \S
+    AuthRegisterRequest:
+      type: object
+      required:
+      - name
+      - email
+      - password
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+          pattern: \S
+        email:
+          type: string
+          maxLength: 320
+          pattern: \S
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+          pattern: \S
+    AuthTokenResponse:
+      type: object
+      properties:
+        tokenType:
+          type: string
+        accessToken:
+          type: string
+        expiresInSeconds:
+          type: integer
+          format: int64
+    ChangePasswordRequest:
+      type: object
+      required:
+      - currentPassword
+      - newPassword
+      properties:
+        currentPassword:
+          type: string
+          pattern: \S
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 72
+          pattern: \S
+    ForgotPasswordRequest:
+      type: object
+      required:
+      - email
+      properties:
+        email:
+          type: string
+          pattern: \S
+    ProductBomItemResponse:
+      type: object
+      properties:
+        rawMaterialId:
+          type: integer
+          format: int64
+        rawMaterialCode:
+          type: string
+        rawMaterialName:
+          type: string
+        quantityRequired:
+          type: number
+    ProductCreateRequest:
+      type: object
+      required:
+      - name
+      - value
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+          pattern: \S
+        value:
+          type: number
+          exclusiveMinimum: 0
+    ProductMaterialUpsertRequest:
+      type: object
+      required:
+      - rawMaterialId
+      - quantityRequired
+      properties:
+        rawMaterialId:
+          type: integer
+          format: int64
+        quantityRequired:
+          type: number
+          exclusiveMinimum: 0
+    ProductResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        code:
+          type: string
+        name:
+          type: string
+        value:
+          type: number
+    ProductUpdateRequest:
+      type: object
+      required:
+      - name
+      - value
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+          pattern: \S
+        value:
+          type: number
+          exclusiveMinimum: 0
+    ProductionSuggestionItemResponse:
+      type: object
+      properties:
+        productId:
+          type: integer
+          format: int64
+        productCode:
+          type: string
+        productName:
+          type: string
+        unitValue:
+          type: number
+        quantity:
+          type: integer
+          format: int64
+        totalValue:
+          type: number
+    ProductionSuggestionResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductionSuggestionItemResponse"
+        totalValue:
+          type: number
+    RawMaterialCreateRequest:
+      type: object
+      required:
+      - name
+      - stockQuantity
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+          pattern: \S
+        stockQuantity:
+          type: number
+          minimum: 0
+        unitOfMeasure:
+          $ref: "#/components/schemas/UnitOfMeasure"
+    RawMaterialResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        code:
+          type: string
+        name:
+          type: string
+        stockQuantity:
+          type: number
+        unitOfMeasure:
+          $ref: "#/components/schemas/UnitOfMeasure"
+    RawMaterialUpdateRequest:
+      type: object
+      required:
+      - name
+      - stockQuantity
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+          pattern: \S
+        stockQuantity:
+          type: number
+          minimum: 0
+        unitOfMeasure:
+          $ref: "#/components/schemas/UnitOfMeasure"
+    ResetPasswordRequest:
+      type: object
+      required:
+      - token
+      - newPassword
+      properties:
+        token:
+          type: string
+          pattern: \S
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 72
+          pattern: \S
+    UnitOfMeasure:
+      type: string
+      enum:
+      - UN
+      - KG
+      - G
+      - L
+      - ML
+  securitySchemes:
+    SecurityScheme:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Authentication
+paths:
+  /api/v1/auth/forgot-password:
+    post:
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+      summary: Forgot Password
+  /api/v1/auth/login:
+    post:
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthLoginRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenResponse"
+        "400":
+          description: Bad Request
+      summary: Login
+  /api/v1/auth/register:
+    post:
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthRegisterRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+      summary: Register
+  /api/v1/auth/reset-password:
+    post:
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+      summary: Reset Password
+  /api/v1/me:
+    get:
+      tags:
+      - Me
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Me
+      security:
+      - SecurityScheme:
+        - USER
+  /api/v1/me/password:
+    put:
+      tags:
+      - Me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Change Password
+      security:
+      - SecurityScheme:
+        - USER
+  /api/v1/production/suggestions:
+    get:
+      tags:
+      - Production
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductionSuggestionResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Suggest
+      security:
+      - SecurityScheme:
+        - USER
+  /api/v1/products:
+    get:
+      tags:
+      - Products
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: List
+      security:
+      - SecurityScheme:
+        - USER
+    post:
+      tags:
+      - Products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductCreateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Create
+      security:
+      - SecurityScheme:
+        - USER
+  /api/v1/products/{id}:
+    put:
+      tags:
+      - Products
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductUpdateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Update
+      security:
+      - SecurityScheme:
+        - USER
+    get:
+      tags:
+      - Products
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get
+      security:
+      - SecurityScheme:
+        - USER
+    delete:
+      tags:
+      - Products
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete
+      security:
+      - SecurityScheme:
+        - USER
+  /api/v1/products/{id}/materials:
+    put:
+      tags:
+      - Products
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/ProductMaterialUpsertRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductBomItemResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Replace Materials
+      security:
+      - SecurityScheme:
+        - USER
+    get:
+      tags:
+      - Products
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductBomItemResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: List Materials
+      security:
+      - SecurityScheme:
+        - USER
+  /api/v1/raw-materials:
+    get:
+      tags:
+      - Raw Materials
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RawMaterialResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: List
+      security:
+      - SecurityScheme:
+        - USER
+    post:
+      tags:
+      - Raw Materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RawMaterialCreateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Create
+      security:
+      - SecurityScheme:
+        - USER
+  /api/v1/raw-materials/{id}:
+    put:
+      tags:
+      - Raw Materials
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RawMaterialUpdateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RawMaterialResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Update
+      security:
+      - SecurityScheme:
+        - USER
+    get:
+      tags:
+      - Raw Materials
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RawMaterialResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get
+      security:
+      - SecurityScheme:
+        - USER
+    delete:
+      tags:
+      - Raw Materials
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete
+      security:
+      - SecurityScheme:
+        - USER
+info:
+  title: Alpha Steel API
+  version: "1.0"
+  description: This is the official API documentation for Alpha Steel. It lists the
+    available endpoints and how to authenticate using Bearer JWT.

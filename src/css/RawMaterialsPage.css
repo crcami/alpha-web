@@ -43,6 +43,10 @@
   border-bottom: none;
 }
 
+.raw-materials-page .table.table-brand tbody tr td {
+  transition: all 150ms ease-in-out;
+}
+
 .raw-materials-page .table.table-brand tbody tr:hover td {
   background: rgba(105, 114, 171, 0.06);
 }
