@@ -17,7 +17,6 @@ type OverlayCardProps = {
   onClose: () => void;
 };
 
-/** Renders a centered overlay card for confirmations, errors and success. */
 export function OverlayCard({
   open,
   title,
@@ -57,15 +56,15 @@ export function OverlayCard({
         className={`overlay-card overlay-card--${variant}`}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div
-          className={`overlay-head ${isSuccess ? "overlay-head--center" : ""}`}
-        >
+        <div className="overlay-head overlay-head--centered">
           <div className="overlay-title-wrap">
             {isSuccess ? (
               <span className="overlay-title-ornament" aria-hidden="true">
                 <Sparkles size={18} />
               </span>
-            ) : null}
+            ) : (
+              <span className="overlay-title-ornament overlay-title-ornament--spacer" />
+            )}
 
             <h2 className="overlay-title">{title}</h2>
 
@@ -73,26 +72,30 @@ export function OverlayCard({
               <span className="overlay-title-ornament" aria-hidden="true">
                 <Sparkles size={18} />
               </span>
-            ) : null}
+            ) : (
+              <span className="overlay-title-ornament overlay-title-ornament--spacer" />
+            )}
           </div>
 
           <button
             className="overlay-close"
             onClick={onClose}
             type="button"
-            aria-label="Close"
+            aria-label="Fechar"
             title="Fechar"
           >
             <X size={18} />
           </button>
         </div>
 
-        <div className="overlay-body">
+        <div className="overlay-body overlay-body--centered">
           {icon ? <div className="overlay-icon">{icon}</div> : null}
-          <div className="overlay-content">{message}</div>
+          <div className="overlay-content overlay-content--centered">
+            {message}
+          </div>
         </div>
 
-        <div className="overlay-actions">
+        <div className="overlay-actions overlay-actions--centered">
           {actions ?? (
             <button className="btn ghost" onClick={onClose} type="button">
               Fechar

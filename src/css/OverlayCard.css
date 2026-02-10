@@ -37,7 +37,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   position: absolute;
   right: 16px;
   top: 50%;
@@ -158,3 +157,63 @@
   background: rgba(105, 114, 171, 0.14);
   color: #6972ab;
 }
+
+.overlay-head.overlay-head--centered {
+  display: grid;
+  grid-template-columns: 38px 1fr 38px;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.overlay-title-wrap {
+  grid-column: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.overlay-title {
+  margin: 0;
+  font-size: 18px;
+  text-align: center;
+}
+
+.overlay-title-ornament {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay-title-ornament--spacer {
+  width: 18px;
+  height: 18px;
+}
+
+.overlay-close {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.overlay-body.overlay-body--centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+.overlay-content.overlay-content--centered {
+  text-align: center;
+  width: 100%;
+}
+
+.overlay-actions.overlay-actions--centered {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 16px 16px;
+}
+

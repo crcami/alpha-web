@@ -1,0 +1,136 @@
+:root {
+  --brand-primary: #6972ab;
+  --brand-accent: #9e3358;
+  --brand-ink: rgba(0, 0, 0, 0.82);
+  --tip-bg: #088395;
+  --danger-red: #d73535;
+}
+
+/* Standardize button colors */
+.raw-materials-page .btn.btn-solid {
+  background: var(--brand-accent);
+  background-image: none;
+  color: #ffffff;
+  border: 1px solid var(--brand-accent);
+}
+
+.raw-materials-page .btn.btn-solid:hover {
+  filter: brightness(0.96);
+}
+
+.raw-materials-page .table.table-brand {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(105, 114, 171, 0.22);
+}
+
+.raw-materials-page .table.table-brand thead th {
+  background: rgba(105, 114, 171, 0.12);
+  color: var(--brand-ink);
+  border-bottom: 1px solid rgba(105, 114, 171, 0.22);
+}
+
+.raw-materials-page .table.table-brand th + th,
+.raw-materials-page .table.table-brand td + td {
+  border-left: 1px solid rgba(105, 114, 171, 0.12);
+}
+
+.raw-materials-page .table.table-brand tbody td {
+  border-bottom: 1px solid rgba(105, 114, 171, 0.12);
+}
+
+.raw-materials-page .table.table-brand tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.raw-materials-page .table.table-brand tbody tr:hover td {
+  background: rgba(105, 114, 171, 0.06);
+}
+
+.raw-materials-page .row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.raw-materials-page .icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid rgba(105, 114, 171, 0.28);
+  color: var(--brand-primary);
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+  position: relative;
+}
+
+.raw-materials-page .icon-btn:hover {
+  background: rgba(105, 114, 171, 0.1);
+  transform: translateY(-1px);
+  border-color: rgba(105, 114, 171, 0.42);
+}
+
+.raw-materials-page .icon-btn:active {
+  transform: translateY(0);
+}
+
+.raw-materials-page .icon-btn.danger {
+  border-color: rgba(158, 51, 88, 0.28);
+  color: var(--brand-accent);
+}
+
+.raw-materials-page .icon-btn.danger:hover {
+  background: rgba(158, 51, 88, 0.1);
+  border-color: rgba(158, 51, 88, 0.42);
+}
+
+.raw-materials-page .icon-btn[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  background: var(--tip-bg);
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+  transform-origin: bottom center;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+}
+
+.raw-materials-page .icon-btn[data-tip]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--tip-bg);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.raw-materials-page .icon-btn[data-tip]:hover::after,
+.raw-materials-page .icon-btn[data-tip]:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.raw-materials-page .icon-btn[data-tip]:hover::before,
+.raw-materials-page .icon-btn[data-tip]:focus-visible::before {
+  opacity: 1;
+}

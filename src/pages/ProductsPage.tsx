@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { NumericFormat } from "react-number-format";
-import { AlertTriangle, Eye, Pencil, Trash2, X } from "lucide-react";
+import { AlertTriangle, Eye, Pencil, Trash2, X, Plus } from "lucide-react";
 
 import { productsApi } from "../api/productsApi";
 import { rawMaterialsApi } from "../api/rawMaterialsApi";
@@ -33,6 +33,9 @@ type OverlayState =
     }
   | null;
 
+type SortOption = "name-asc" | "name-desc" | "value-asc" | "value-desc";
+
+/** Formats BRL-style money with 2 decimals. */
 function formatMoney(value: number): string {
   return value.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
@@ -40,11 +43,32 @@ function formatMoney(value: number): string {
   });
 }
 
+/** Normalizes IDs to string to avoid string/number mismatch. */
+function toId(value: unknown): string {
+  return String(value ?? "");
+}
+
+/** Coerces any input number into a valid integer quantity (>= 1). */
+function toPositiveInt(value: unknown): number {
+  const n =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : Number.NaN;
+
+  if (!Number.isFinite(n)) return 1;
+
+  const int = Math.trunc(n);
+  return int < 1 ? 1 : int;
+}
+
 /** Renders the products page. */
 export function ProductsPage() {
   const [items, setItems] = useState<Product[]>([]);
   const [materials, setMaterials] = useState<RawMaterial[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortOption, setSortOption] = useState<SortOption>("name-asc");
 
   const [error, setError] = useState<string | null>(null);
   const [overlay, setOverlay] = useState<OverlayState>(null);
@@ -59,12 +83,37 @@ export function ProductsPage() {
     bom: [],
   });
 
+  const [selectedMaterialId, setSelectedMaterialId] = useState<string>("");
+
   const isReadOnly = modalMode === "view";
 
-  const materialOptions = useMemo(
-    () => materials.map((m) => ({ id: m.id, label: `${m.code} - ${m.name}` })),
-    [materials],
-  );
+  const materialOptions = useMemo(() => {
+    return materials.map((m) => ({
+      id: toId(m.id),
+      label: `${m.code} - ${m.name}`,
+    }));
+  }, [materials]);
+
+  const sortedItems = useMemo(() => {
+    const sorted = [...items];
+
+    switch (sortOption) {
+      case "name-asc":
+        sorted.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        break;
+      case "name-desc":
+        sorted.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+        break;
+      case "value-asc":
+        sorted.sort((a, b) => (a.unitValue || 0) - (b.unitValue || 0));
+        break;
+      case "value-desc":
+        sorted.sort((a, b) => (b.unitValue || 0) - (a.unitValue || 0));
+        break;
+    }
+
+    return sorted;
+  }, [items, sortOption]);
 
   async function load() {
     setLoading(true);
@@ -96,6 +145,7 @@ export function ProductsPage() {
     setError(null);
     setModalMode("create");
     setDraft({ code: "", name: "", unitValue: null, bom: [] });
+    setSelectedMaterialId("");
     setModalOpen(true);
   }
 
@@ -107,8 +157,13 @@ export function ProductsPage() {
       code: p.code ?? "",
       name: p.name ?? "",
       unitValue: Number.isFinite(p.unitValue) ? p.unitValue : null,
-      bom: p.bom ?? [],
+      bom: (p.bom ?? []).map((b) => ({
+        ...b,
+        rawMaterialId: toId(b.rawMaterialId),
+        quantityNeeded: toPositiveInt(b.quantityNeeded),
+      })),
     });
+    setSelectedMaterialId("");
     setModalOpen(true);
   }
 
@@ -120,29 +175,44 @@ export function ProductsPage() {
       code: p.code ?? "",
       name: p.name ?? "",
       unitValue: Number.isFinite(p.unitValue) ? p.unitValue : null,
-      bom: p.bom ?? [],
+      bom: (p.bom ?? []).map((b) => ({
+        ...b,
+        rawMaterialId: toId(b.rawMaterialId),
+        quantityNeeded: toPositiveInt(b.quantityNeeded),
+      })),
     });
+    setSelectedMaterialId("");
     setModalOpen(true);
   }
 
   function addBomItem(rawMaterialId: string) {
     if (isReadOnly) return;
-    if (!rawMaterialId) return;
-    if (draft.bom.some((b) => b.rawMaterialId === rawMaterialId)) return;
 
-    setDraft((d) => ({
-      ...d,
-      bom: [...d.bom, { rawMaterialId, quantityNeeded: 1 }],
-    }));
+    const id = toId(rawMaterialId);
+    if (!id) return;
+
+    setDraft((d) => {
+      if (d.bom.some((b) => toId(b.rawMaterialId) === id)) return d;
+
+      return {
+        ...d,
+        bom: [...d.bom, { rawMaterialId: id, quantityNeeded: 1 }],
+      };
+    });
+
+    setSelectedMaterialId("");
   }
 
   function updateBomQty(rawMaterialId: string, qty: number) {
     if (isReadOnly) return;
 
+    const id = toId(rawMaterialId);
+    const nextQty = toPositiveInt(qty);
+
     setDraft((d) => ({
       ...d,
       bom: d.bom.map((b) =>
-        b.rawMaterialId === rawMaterialId ? { ...b, quantityNeeded: qty } : b,
+        toId(b.rawMaterialId) === id ? { ...b, quantityNeeded: nextQty } : b,
       ),
     }));
   }
@@ -150,9 +220,11 @@ export function ProductsPage() {
   function removeBomItem(rawMaterialId: string) {
     if (isReadOnly) return;
 
+    const id = toId(rawMaterialId);
+
     setDraft((d) => ({
       ...d,
-      bom: d.bom.filter((b) => b.rawMaterialId !== rawMaterialId),
+      bom: d.bom.filter((b) => toId(b.rawMaterialId) !== id),
     }));
   }
 
@@ -173,7 +245,7 @@ export function ProductsPage() {
     }
 
     if (
-      !draft.unitValue ||
+      draft.unitValue === null ||
       !Number.isFinite(draft.unitValue) ||
       draft.unitValue <= 0
     ) {
@@ -181,11 +253,22 @@ export function ProductsPage() {
       return;
     }
 
+    if (draft.bom.length === 0) {
+      setError("Adicione ao menos uma matéria-prima na receita do produto.");
+      return;
+    }
+
+    const normalizedBom: ProductBomItem[] = draft.bom.map((b) => ({
+      ...b,
+      rawMaterialId: toId(b.rawMaterialId),
+      quantityNeeded: toPositiveInt(b.quantityNeeded),
+    }));
+
     const payload = {
       code,
       name,
       unitValue: draft.unitValue,
-      bom: draft.bom,
+      bom: normalizedBom,
     };
 
     try {
@@ -246,8 +329,25 @@ export function ProductsPage() {
           onClick={openCreate}
           type="button"
         >
+          <Plus size={18} />
           Novo produto
         </button>
+      </div>
+
+      <div className="filter-bar">
+        <div className="filter-group">
+          <label className="filter-label">Ordenar por:</label>
+          <select
+            className="filter-select"
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value as SortOption)}
+          >
+            <option value="name-asc">Nome (A-Z)</option>
+            <option value="name-desc">Nome (Z-A)</option>
+            <option value="value-asc">Menor valor</option>
+            <option value="value-desc">Maior valor</option>
+          </select>
+        </div>
       </div>
 
       {error ? <div className="alert">{error}</div> : null}
@@ -255,7 +355,7 @@ export function ProductsPage() {
       <div className="card">
         {loading ? (
           <p>Carregando...</p>
-        ) : items.length === 0 ? (
+        ) : sortedItems.length === 0 ? (
           <p>Nenhum produto encontrado.</p>
         ) : (
           <div className="table-wrap">
@@ -270,7 +370,7 @@ export function ProductsPage() {
               </thead>
 
               <tbody>
-                {items.map((p) => (
+                {sortedItems.map((p) => (
                   <tr key={p.id}>
                     <td>{p.code}</td>
                     <td>{p.name}</td>
@@ -401,18 +501,22 @@ export function ProductsPage() {
 
             <div className="divider" />
 
-            <h3>Lista de Materiais</h3>
+            <h3>Receita do produto (Lista de materiais)</h3>
             <p className="muted">
-              Adicione matérias-primas usadas para produzir uma unidade deste
-              produto.
+              Selecione matérias-primas e informe a quantidade necessária para
+              produzir <strong>1 unidade</strong> do produto.
             </p>
 
             <div className="grid2">
               <div className="field">
                 <label>Adicionar matéria-prima</label>
                 <select
-                  onChange={(e) => addBomItem(e.target.value)}
-                  defaultValue=""
+                  value={selectedMaterialId}
+                  onChange={(e) => {
+                    const id = toId(e.target.value);
+                    setSelectedMaterialId(id);
+                    addBomItem(id);
+                  }}
                   disabled={isReadOnly}
                 >
                   <option value="" disabled>
@@ -430,23 +534,35 @@ export function ProductsPage() {
             {draft.bom.length === 0 ? (
               <p className="muted">Nenhuma matéria-prima vinculada ainda.</p>
             ) : (
-              <div className="card subtle">
+              <div className="card subtle bom-card">
+                <div className="bom-header" aria-hidden="true">
+                  <div className="bom-col bom-col--material">Matéria-prima</div>
+                  <div className="bom-col bom-col--qty">Qtd. p/ 1 un.</div>
+                  <div className="bom-col bom-col--actions" />
+                </div>
+
                 {draft.bom.map((b) => {
-                  const rm = materials.find((x) => x.id === b.rawMaterialId);
+                  const rm = materials.find(
+                    (x) => toId(x.id) === toId(b.rawMaterialId),
+                  );
+
                   return (
-                    <div className="bom-row" key={b.rawMaterialId}>
-                      <div>
+                    <div className="bom-row" key={toId(b.rawMaterialId)}>
+                      <div className="bom-col bom-col--material">
                         <strong>
-                          {rm ? `${rm.code} - ${rm.name}` : b.rawMaterialId}
+                          {rm
+                            ? `${rm.code} - ${rm.name}`
+                            : `ID: ${toId(b.rawMaterialId)}`}
                         </strong>
                       </div>
 
-                      <div className="bom-controls">
+                      <div className="bom-col bom-col--qty">
                         <input
                           type="number"
-                          min={0}
-                          step="0.01"
-                          value={b.quantityNeeded}
+                          min={1}
+                          step={1}
+                          inputMode="numeric"
+                          value={toPositiveInt(b.quantityNeeded)}
                           onChange={(e) =>
                             updateBomQty(
                               b.rawMaterialId,
@@ -455,8 +571,11 @@ export function ProductsPage() {
                           }
                           disabled={isReadOnly}
                           readOnly={isReadOnly}
+                          aria-label="Quantidade por unidade"
                         />
+                      </div>
 
+                      <div className="bom-col bom-col--actions">
                         {isReadOnly ? null : (
                           <button
                             className="btn danger"
@@ -513,7 +632,7 @@ export function ProductsPage() {
             <AlertTriangle size={22} />
           ) : null
         }
-        autoCloseMs={overlay?.kind === "confirm-delete" ? 6000 : 6000}
+        autoCloseMs={6000}
         closeOnBackdrop={overlay?.kind !== "confirm-delete"}
         onClose={() => setOverlay(null)}
         message={
