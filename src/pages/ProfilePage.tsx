@@ -1,8 +1,10 @@
 import { useContext, useEffect, useMemo, useState } from "react";
-import { User, Eye, EyeOff, Lock, Mail, CheckCircle2 } from "lucide-react";
+import { User, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { AuthContext } from "../auth/AuthContext";
 import { authApi } from "../api/authApi";
+import { useToast } from "../context/ToastContext";
 import "../css/ProfilePage.css";
+import "../css/ProfilePageDark.css";
 
 type PasswordChecks = {
   minLength: boolean;
@@ -24,6 +26,7 @@ function getPasswordChecks(password: string): PasswordChecks {
 
 export function ProfilePage() {
   const { logout, userEmail } = useContext(AuthContext);
+  const { showToast } = useToast();
 
   // User info state
   const [name, setName] = useState("");
@@ -40,10 +43,6 @@ export function ProfilePage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
 
   const checks = useMemo(() => getPasswordChecks(newPassword), [newPassword]);
 
@@ -73,18 +72,29 @@ export function ProfilePage() {
     }
   }, [userEmail]);
 
+  useEffect(() => {
+    async function fetchUserData() {
+      try {
+        const userData = await authApi.getMe();
+        setName(userData.name || "");
+        setEmail(userData.email || "");
+      } catch (err) {
+        console.error("Erro ao buscar dados do usuário:", err);
+        showToast("error", "Não foi possível carregar os dados do usuário.");
+      }
+    }
+
+    fetchUserData();
+  }, [showToast]);
+
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
-    setMessage(null);
 
     if (!canChangePassword) {
       if (confirmPassword !== newPassword) {
-        setMessage({ type: "error", text: "As senhas não conferem." });
+        showToast("error", "As senhas não conferem.");
       } else if (!allPasswordOk) {
-        setMessage({
-          type: "error",
-          text: "Os requisitos de senha não foram atendidos.",
-        });
+        showToast("error", "Os requisitos de senha não foram atendidos.");
       }
       return;
     }
@@ -95,22 +105,21 @@ export function ProfilePage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setMessage({ type: "success", text: "Senha alterada com sucesso!" });
+      showToast("success", "Senha alterada com sucesso!");
     } catch (err) {
       const errorMessage =
         err instanceof Error
           ? err.message
           : "Não foi possível alterar a senha.";
-      setMessage({ type: "error", text: errorMessage });
+      showToast("error", errorMessage);
     } finally {
       setBusy(false);
     }
   }
 
   function handleSaveName() {
-    // TODO: Implement API call to save name
     setIsEditingName(false);
-    setMessage({ type: "success", text: "Nome atualizado com sucesso!" });
+    showToast("success", "Nome atualizado com sucesso!");
   }
 
   return (
@@ -133,16 +142,6 @@ export function ProfilePage() {
         </button>
       </div>
 
-      {message && (
-        <div
-          className={`profile-message ${message.type === "success" ? "success" : "error"}`}
-        >
-          {message.type === "success" && <CheckCircle2 size={20} />}
-          <span>{message.text}</span>
-        </div>
-      )}
-
-      {/* User Information Card */}
       <div className="profile-card">
         <div className="profile-card-header">
           <h2>Informações Pessoais</h2>

@@ -2,13 +2,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { RotateCw } from "lucide-react";
 
 import { productionApi } from "../api/productionApi";
-import type { ProductionSuggestion } from "../types/models";
+import { productsApi } from "../api/productsApi";
+import { rawMaterialsApi } from "../api/rawMaterialsApi";
+import type {
+  ProductionSuggestion,
+  Product,
+  RawMaterial,
+} from "../types/models";
 
 import "../css/ProductionPage.css";
 
-/** Renders the production suggestions page. */
 export function ProductionPage() {
   const [items, setItems] = useState<ProductionSuggestion[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [materials, setMaterials] = useState<RawMaterial[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +67,7 @@ export function ProductionPage() {
       quantity,
       unitValue,
       totalValue,
+      unitOfMeasure: String(r.unitOfMeasure ?? "un").toLowerCase(),
     };
   }
 
@@ -68,15 +76,22 @@ export function ProductionPage() {
     setError(null);
 
     try {
-      const res = await productionApi.suggest();
+      const [res, prodRes, matRes] = await Promise.all([
+        productionApi.suggest(),
+        productsApi.list(),
+        rawMaterialsApi.list(),
+      ]);
 
-      const rawSuggestions = Array.isArray(res?.suggestions)
-        ? res.suggestions
-        : [];
+      const rawSuggestions = Array.isArray(res?.items) ? res.items : [];
+      setProducts(prodRes);
+      setMaterials(matRes);
 
       const normalized = rawSuggestions
-        .map((s) => normalizeSuggestion(s))
-        .filter((s): s is ProductionSuggestion => s !== null);
+        .map((s: unknown) => normalizeSuggestion(s))
+        .filter(
+          (s: ProductionSuggestion | null): s is ProductionSuggestion =>
+            s !== null,
+        );
 
       const totalValue = toNumber(res?.totalValue, 0);
 
@@ -101,14 +116,12 @@ export function ProductionPage() {
         <h1>Sugestões de produção</h1>
 
         <button
-          className="icon-btn"
+          className="btn btn-refresh"
           onClick={() => void load()}
           type="button"
-          aria-label="Atualizar"
-          title="Atualizar"
-          data-tip="Atualizar"
         >
           <RotateCw size={18} />
+          Atualizar
         </button>
       </div>
 
@@ -144,7 +157,9 @@ export function ProductionPage() {
                 <div className="production-card-body">
                   <div className="production-metric">
                     <div className="metric-label">Quantidade</div>
-                    <div className="metric-value">{s.quantity}</div>
+                    <div className="metric-value">
+                      {s.quantity} {s.unitOfMeasure?.toUpperCase() || "UN"}
+                    </div>
                   </div>
 
                   <div className="production-metric">
@@ -160,6 +175,46 @@ export function ProductionPage() {
                       {money.format(s.totalValue)}
                     </div>
                   </div>
+
+                  {/* Materiais Necessários */}
+                  {(() => {
+                    const product = products.find((p) => p.id === s.productId);
+                    if (!product || !product.bom || product.bom.length === 0)
+                      return null;
+
+                    return (
+                      <div className="needed-materials">
+                        <div className="materials-title">
+                          Materiais Necessários
+                        </div>
+                        <div className="materials-list">
+                          {product.bom.map((bomItem, idx) => {
+                            const rawMat = materials.find(
+                              (m) => m.id === bomItem.rawMaterialId,
+                            );
+                            const unit =
+                              rawMat?.unitOfMeasure?.toUpperCase() || "UN";
+
+                            return (
+                              <div key={idx} className="material-item">
+                                <span className="material-name">
+                                  {bomItem.rawMaterialName ||
+                                    rawMat?.name ||
+                                    "Material"}
+                                </span>
+                                <span className="material-amount">
+                                  {(
+                                    bomItem.quantityRequired * s.quantity
+                                  ).toLocaleString("pt-BR")}{" "}
+                                  {unit}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             ))}
@@ -167,10 +222,11 @@ export function ProductionPage() {
 
           <div className="production-note">
             <p>
-              <strong>Observação:</strong> Valores exibidos em{" "}
-              <strong>{money.resolvedOptions().currency}</strong>. Quantidades
-              são calculadas com base no <strong>BOM</strong> de cada produto e
-              no estoque atual.
+              <strong>Nota:</strong> Todos os valores são exibidos em{" "}
+              <strong>Reais (R$)</strong>. As sugestões mostram o máximo que
+              pode ser produzido agora, considerando a <strong>receita</strong>{" "}
+              de cada produto e o <strong>estoque disponível</strong> de
+              matérias-primas.
             </p>
           </div>
         </>

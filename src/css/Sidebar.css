@@ -1,7 +1,7 @@
 .sidebar {
   width: 260px;
   min-height: 100vh;
-  background: #6972ab;
+  background: linear-gradient(180deg, #6972ab 0%, #5d669d 100%);
   display: flex;
   flex-direction: column;
   padding: 20px 0;
@@ -10,12 +10,62 @@
   top: 0;
   bottom: 0;
   z-index: 100;
+  transition: background 0.3s ease;
+  box-shadow: 
+    4px 0 16px rgba(105, 114, 171, 0.5),
+    6px 0 28px rgba(158, 51, 88, 0.35),
+    8px 0 36px rgba(105, 114, 171, 0.2);
+}
+
+ 
+[data-theme="dark"] .sidebar {
+  background: linear-gradient(180deg, #1a1d29 0%, #151720 100%);
+  border-right: 1px solid rgba(123, 133, 193, 0.15);
+  box-shadow: 
+    4px 0 20px rgba(123, 133, 193, 0.4),
+    6px 0 32px rgba(180, 67, 110, 0.3),
+    inset -1px 0 0 rgba(123, 133, 193, 0.2);
 }
 
 .sidebar-header {
   padding: 0 20px 30px;
   display: flex;
   justify-content: center;
+  position: relative;
+}
+
+ 
+.sidebar-header::after {
+  content: "";
+  position: absolute;
+  bottom: 12px;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent,
+    rgba(158, 51, 88, 0.75) 20%,
+    rgba(105, 114, 171, 0.95) 50%,
+    rgba(158, 51, 88, 0.75) 80%,
+    transparent
+  );
+  box-shadow: 
+    0 0 10px rgba(105, 114, 171, 0.8),
+    0 0 16px rgba(158, 51, 88, 0.6),
+    0 2px 8px rgba(105, 114, 171, 0.4);
+}
+
+[data-theme="dark"] .sidebar-header::after {
+  background: linear-gradient(90deg, 
+    transparent,
+    rgba(180, 67, 110, 0.7) 20%,
+    rgba(123, 133, 193, 0.9) 50%,
+    rgba(180, 67, 110, 0.7) 80%,
+    transparent
+  );
+  box-shadow: 
+    0 0 10px rgba(123, 133, 193, 0.8),
+    0 0 16px rgba(180, 67, 110, 0.6);
 }
 
 .sidebar-brand {
@@ -28,7 +78,12 @@
   width: 110px;
   height: 110px;
   object-fit: contain;
-  filter: brightness(1.2);
+  filter: brightness(1.2) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .sidebar-logo {
+  filter: brightness(1.1) drop-shadow(0 4px 12px rgba(123, 133, 193, 0.3));
 }
 
 .sidebar-nav {
@@ -51,17 +106,66 @@
   transition: all 0.2s ease;
   text-decoration: none;
   cursor: pointer;
+  position: relative;
+  border: 1px solid transparent;
 }
 
 .sidebar-link:hover {
   background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-link.active {
   background: rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Enhanced neon effect on active link - Light mode */
+.sidebar-link.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: linear-gradient(180deg, #9e3358, #6972ab);
+  border-radius: 0 2px 2px 0;
+  box-shadow: 
+    0 0 12px rgba(158, 51, 88, 1),
+    0 0 18px rgba(105, 114, 171, 0.8),
+    2px 0 8px rgba(158, 51, 88, 0.6);
+}
+
+[data-theme="dark"] .sidebar-link {
+  color: rgba(232, 234, 237, 0.85);
+}
+
+[data-theme="dark"] .sidebar-link:hover {
+  background: rgba(123, 133, 193, 0.15);
+  color: #ffffff;
+  border-color: rgba(123, 133, 193, 0.2);
+}
+
+[data-theme="dark"] .sidebar-link.active {
+  background: rgba(123, 133, 193, 0.25);
+  color: #ffffff;
+  border-color: rgba(123, 133, 193, 0.3);
+  box-shadow: 
+    0 4px 12px rgba(123, 133, 193, 0.2),
+    inset 0 1px 0 rgba(123, 133, 193, 0.2);
+}
+
+[data-theme="dark"] .sidebar-link.active::before {
+  background: linear-gradient(180deg, #b4436e, #7b85c1);
+  box-shadow: 
+    0 0 10px rgba(180, 67, 110, 0.9),
+    0 0 16px rgba(123, 133, 193, 0.7);
 }
 
 .sidebar-footer {
@@ -71,6 +175,81 @@
   gap: 6px;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   padding-top: 16px;
+  position: relative;
+}
+ 
+.sidebar-footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent,
+    rgba(158, 51, 88, 0.7) 30%,
+    rgba(105, 114, 171, 0.9) 50%,
+    rgba(158, 51, 88, 0.7) 70%,
+    transparent
+  );
+  box-shadow: 
+    0 0 8px rgba(105, 114, 171, 0.7),
+    0 -1px 6px rgba(158, 51, 88, 0.5);
+}
+
+[data-theme="dark"] .sidebar-footer {
+  border-top-color: rgba(123, 133, 193, 0.2);
+}
+
+[data-theme="dark"] .sidebar-footer::before {
+  background: linear-gradient(90deg, 
+    transparent,
+    rgba(180, 67, 110, 0.6) 30%,
+    rgba(123, 133, 193, 0.8) 50%,
+    rgba(180, 67, 110, 0.6) 70%,
+    transparent
+  );
+  box-shadow: 0 0 8px rgba(123, 133, 193, 0.6);
+}
+
+/* Theme toggle button */
+.sidebar-theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.sidebar-theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .sidebar-theme-toggle {
+  background: rgba(123, 133, 193, 0.15);
+  border-color: rgba(123, 133, 193, 0.25);
+  color: rgba(232, 234, 237, 0.9);
+}
+
+[data-theme="dark"] .sidebar-theme-toggle:hover {
+  background: rgba(123, 133, 193, 0.25);
+  border-color: rgba(123, 133, 193, 0.35);
+  color: #ffffff;
+  box-shadow: 
+    0 0 12px rgba(123, 133, 193, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-logout {
@@ -79,7 +258,7 @@
   gap: 12px;
   padding: 14px 16px;
   border-radius: 10px;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   color: rgba(255, 255, 255, 0.85);
   font-size: 15px;
@@ -93,13 +272,24 @@
 .sidebar-logout:hover {
   background: rgba(239, 68, 68, 0.2);
   color: #ffffff;
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .sidebar-logout:active {
   transform: translateY(1px);
 }
 
-/* Sidebar backdrop for mobile */
+[data-theme="dark"] .sidebar-logout {
+  color: rgba(232, 234, 237, 0.85);
+}
+
+[data-theme="dark"] .sidebar-logout:hover {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #fca5a5;
+}
+
+ 
 .sidebar-backdrop {
   display: none;
   position: fixed;
@@ -115,11 +305,11 @@
   opacity: 1;
 }
 
-/* Responsive Styles */
+ 
 @media (max-width: 968px) {
   .sidebar {
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, background 0.3s ease;
     z-index: 1000;
   }
 

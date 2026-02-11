@@ -1,11 +1,11 @@
 import React, { createContext, useCallback, useMemo, useState } from "react";
-import { clearToken, getToken, setToken } from "./tokenStorage";
+import { clearTokens, getToken, setTokens } from "./tokenStorage";
 
 type AuthContextValue = {
   token: string | null;
   isAuthenticated: boolean;
   userEmail: string | null;
-  login: (token: string) => void;
+  login: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
 };
 
@@ -20,17 +20,16 @@ export const AuthContext = createContext<AuthContextValue>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [tokenState, setTokenState] = useState<string | null>(getToken());
 
-  const login = useCallback((token: string) => {
-    setToken(token);
-    setTokenState(token);
+  const login = useCallback((accessToken: string, refreshToken: string) => {
+    setTokens(accessToken, refreshToken);
+    setTokenState(accessToken);
   }, []);
 
   const logout = useCallback(() => {
-    clearToken();
+    clearTokens();
     setTokenState(null);
   }, []);
 
-  // Extract email from JWT token
   const userEmail = useMemo(() => {
     if (!tokenState) return null;
     try {

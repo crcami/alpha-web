@@ -3,11 +3,13 @@ import { AlertTriangle, Eye, Pencil, Trash2, X, Plus } from "lucide-react";
 import { NumericFormat } from "react-number-format";
 
 import { rawMaterialsApi } from "../api/rawMaterialsApi";
-import type { RawMaterial } from "../types/models";
+import { unitsOfMeasureApi } from "../api/unitsOfMeasureApi";
+import type { RawMaterial, UnitOfMeasure } from "../types/models";
 import { OverlayCard } from "../components/OverlayCard";
 
 import "../css/ProductsModal.css";
 import "../css/RawMaterialsPage.css";
+import "../css/ThemePages.css";
 
 type ModalMode = "create" | "edit" | "view";
 
@@ -16,6 +18,7 @@ type Draft = {
   code: string;
   name: string;
   stockQuantity: string;
+  unitOfMeasure: string;
 };
 
 type OverlayState = {
@@ -32,6 +35,7 @@ type SortOption = "name-asc" | "name-desc" | "stock-asc" | "stock-desc";
 
 export function RawMaterialsPage() {
   const [items, setItems] = useState<RawMaterial[]>([]);
+  const [unitsOfMeasure, setUnitsOfMeasure] = useState<UnitOfMeasure[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortOption, setSortOption] = useState<SortOption>("name-asc");
 
@@ -42,6 +46,7 @@ export function RawMaterialsPage() {
     code: "",
     name: "",
     stockQuantity: "0",
+    unitOfMeasure: "un",
   });
 
   const [overlay, setOverlay] = useState<OverlayState>({
@@ -113,8 +118,10 @@ export function RawMaterialsPage() {
       message: (
         <div>
           <div style={{ marginBottom: 8 }}>
-            Caso exclua a matéria-prima <strong>{rawMaterial.name}</strong>, não
-            tem como reverter.
+            Caso exclua a matéria-prima, não tem como reverter.
+          </div>
+          <div className="overlay-product-info">
+            <strong>Matéria-prima:</strong> {rawMaterial.name}
           </div>
           <div>Deseja realizar essa ação?</div>
         </div>
@@ -140,8 +147,12 @@ export function RawMaterialsPage() {
   async function load() {
     setLoading(true);
     try {
-      const r = await rawMaterialsApi.list();
+      const [r, u] = await Promise.all([
+        rawMaterialsApi.list(),
+        unitsOfMeasureApi.list(),
+      ]);
       setItems(r);
+      setUnitsOfMeasure(u);
     } catch {
       showError(
         "Erro ao carregar",
@@ -162,7 +173,7 @@ export function RawMaterialsPage() {
 
   function openCreate() {
     setModalMode("create");
-    setDraft({ code: "", name: "", stockQuantity: "0" });
+    setDraft({ code: "", name: "", stockQuantity: "0", unitOfMeasure: "un" });
     setModalOpen(true);
   }
 
@@ -175,6 +186,7 @@ export function RawMaterialsPage() {
       stockQuantity: Number.isFinite(r.stockQuantity)
         ? String(r.stockQuantity)
         : "0",
+      unitOfMeasure: r.unitOfMeasure ?? "un",
     });
     setModalOpen(true);
   }
@@ -188,6 +200,7 @@ export function RawMaterialsPage() {
       stockQuantity: Number.isFinite(r.stockQuantity)
         ? String(r.stockQuantity)
         : "0",
+      unitOfMeasure: r.unitOfMeasure ?? "un",
     });
     setModalOpen(true);
   }
@@ -216,7 +229,12 @@ export function RawMaterialsPage() {
     }
 
     try {
-      const payload = { code, name, stockQuantity: qty };
+      const payload = {
+        code,
+        name,
+        stockQuantity: qty,
+        unitOfMeasure: draft.unitOfMeasure,
+      };
 
       if (draft.id) {
         await rawMaterialsApi.update(draft.id, payload);
@@ -247,7 +265,7 @@ export function RawMaterialsPage() {
   return (
     <section className="page raw-materials-page">
       <div className="page-head">
-        <h1>Matérias-primas</h1>
+        <h1>Gerenciar Matérias-Primas</h1>
 
         <button
           className="btn primary btn-solid"
@@ -295,11 +313,13 @@ export function RawMaterialsPage() {
               <tbody>
                 {sortedItems.map((r) => (
                   <tr key={r.id}>
-                    <td>{r.code}</td>
-                    <td>{r.name}</td>
-                    <td>{r.stockQuantity}</td>
+                    <td data-label="Código">{r.code}</td>
+                    <td data-label="Nome">{r.name}</td>
+                    <td data-label="Estoque">
+                      {r.stockQuantity} {r.unitOfMeasure?.toUpperCase() || "UN"}
+                    </td>
 
-                    <td className="right">
+                    <td className="right" data-label="Ações">
                       <div className="row-actions">
                         <button
                           className="icon-btn"
@@ -411,6 +431,28 @@ export function RawMaterialsPage() {
                   placeholder="0"
                   disabled={isReadOnly}
                 />
+              </div>
+
+              <div className="field">
+                <label>Unidade de Medida</label>
+                <select
+                  className="modal-input"
+                  value={draft.unitOfMeasure}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, unitOfMeasure: e.target.value }))
+                  }
+                  disabled={isReadOnly}
+                >
+                  {unitsOfMeasure.length === 0 ? (
+                    <option value="">Carregando...</option>
+                  ) : (
+                    unitsOfMeasure.map((unit) => (
+                      <option key={unit.id} value={unit.code}>
+                        {unit.name} ({unit.code})
+                      </option>
+                    ))
+                  )}
+                </select>
               </div>
             </div>
 

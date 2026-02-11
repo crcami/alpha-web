@@ -1,8 +1,19 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Package, Layers, Factory, User, LogOut } from "lucide-react";
+import {
+  Package,
+  Layers,
+  Factory,
+  User,
+  LogOut,
+  Sun,
+  Moon,
+  Ruler,
+} from "lucide-react";
 import { useContext } from "react";
 import { AuthContext } from "../../auth/AuthContext";
-import logo from "../../assets/images/logo-alpha.png";
+import { useTheme } from "../../context/ThemeContext";
+import logoAlpha from "../../assets/images/logo-alpha.png";
+import logoLight from "../../assets/images/logo-ligth.png";
 
 import "../../css/Sidebar.css";
 
@@ -13,6 +24,7 @@ interface SidebarProps {
 
 export function Sidebar({ isMobileOpen, onClose }: SidebarProps) {
   const { logout } = useContext(AuthContext);
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   function handleLogout() {
@@ -20,12 +32,14 @@ export function Sidebar({ isMobileOpen, onClose }: SidebarProps) {
     navigate("/auth");
   }
 
+  const currentLogo = theme === "dark" ? logoAlpha : logoLight;
+
   return (
     <>
       <aside className={`sidebar ${isMobileOpen ? "mobile-open" : ""}`}>
         <div className="sidebar-header">
           <Link to="/app/products" className="sidebar-brand" onClick={onClose}>
-            <img src={logo} alt="Alpha Steel" className="sidebar-logo" />
+            <img src={currentLogo} alt="Alpha Steel" className="sidebar-logo" />
           </Link>
         </div>
 
@@ -53,6 +67,17 @@ export function Sidebar({ isMobileOpen, onClose }: SidebarProps) {
           </NavLink>
 
           <NavLink
+            to="/app/units-of-measure"
+            className={({ isActive }) =>
+              isActive ? "sidebar-link active" : "sidebar-link"
+            }
+            onClick={onClose}
+          >
+            <Ruler size={20} />
+            <span>Unidades de Medida</span>
+          </NavLink>
+
+          <NavLink
             to="/app/production"
             className={({ isActive }) =>
               isActive ? "sidebar-link active" : "sidebar-link"
@@ -65,6 +90,16 @@ export function Sidebar({ isMobileOpen, onClose }: SidebarProps) {
         </nav>
 
         <div className="sidebar-footer">
+          <button
+            type="button"
+            className="sidebar-theme-toggle"
+            onClick={toggleTheme}
+            title={`Mudar para tema ${theme === "light" ? "escuro" : "claro"}`}
+          >
+            {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
+            <span>{theme === "light" ? "Modo Escuro" : "Modo Claro"}</span>
+          </button>
+
           <NavLink
             to="/app/profile"
             className={({ isActive }) =>

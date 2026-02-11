@@ -2,7 +2,7 @@ import { apiRequest } from "./http";
 import type { ProductionSuggestion } from "../types/models";
 
 export type ProductionResponse = {
-  suggestions: ProductionSuggestion[];
+  items: ProductionSuggestion[];
   totalValue: number;
 };
 

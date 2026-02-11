@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 
 import { authApi } from "../api/authApi";
 import { AuthContext } from "../auth/AuthContext";
+import { ForgotPasswordModal } from "../components/ForgotPasswordModal";
 
 import hero from "../assets/images/auth-hero.jpg";
 import logo from "../assets/images/logo-alpha.png";
@@ -40,6 +41,7 @@ export function AuthPage() {
   const auth = useContext(AuthContext);
 
   const [mode, setMode] = useState<Mode>("login");
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -117,7 +119,7 @@ export function AuthPage() {
     try {
       if (mode === "login") {
         const res = await authApi.login({ email: safeEmail, password });
-        auth.login(res.accessToken);
+        auth.login(res.accessToken, res.refreshToken);
         navigate("/app/products", { replace: true });
         return;
       }
@@ -125,7 +127,7 @@ export function AuthPage() {
       await authApi.register({ email: safeEmail, password, name: safeName });
 
       const res = await authApi.login({ email: safeEmail, password });
-      auth.login(res.accessToken);
+      auth.login(res.accessToken, res.refreshToken);
 
       navigate("/app/products", { replace: true });
     } catch (err: unknown) {
@@ -234,6 +236,17 @@ export function AuthPage() {
                 </div>
               </div>
 
+              {mode === "login" && (
+                <button
+                  type="button"
+                  className="auth-forgot-link"
+                  onClick={() => setIsForgotPasswordOpen(true)}
+                  disabled={busy}
+                >
+                  Esqueceu a senha?
+                </button>
+              )}
+
               {mode === "register" && (
                 <>
                   <div className="auth-field">
@@ -340,6 +353,11 @@ export function AuthPage() {
           </div>
         </div>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
+      />
     </div>
   );
 }

@@ -9,6 +9,10 @@
   z-index: 9999;
 }
 
+[data-theme="dark"] .overlay-backdrop {
+  background: rgba(0, 0, 0, 0.75);
+}
+
 .overlay-card {
   width: min(640px, 100%);
   border-radius: 18px;
@@ -18,6 +22,12 @@
   overflow: hidden;
 }
 
+[data-theme="dark"] .overlay-card {
+  background: var(--bg-card);
+  border-color: rgba(123, 133, 193, 0.2);
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.6);
+}
+
 .overlay-head {
   display: flex;
   align-items: center;
@@ -25,6 +35,10 @@
   padding: 14px 16px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   position: relative;
+}
+
+[data-theme="dark"] .overlay-head {
+  border-bottom-color: rgba(123, 133, 193, 0.2);
 }
 
 .overlay-close {
@@ -47,6 +61,17 @@
   background: rgba(0, 0, 0, 0.03);
 }
 
+[data-theme="dark"] .overlay-close {
+  background: var(--bg-secondary);
+  border-color: rgba(123, 133, 193, 0.25);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .overlay-close:hover {
+  background: var(--bg-hover);
+  border-color: rgba(123, 133, 193, 0.35);
+}
+
 .overlay-title-wrap {
   display: inline-flex;
   align-items: center;
@@ -61,6 +86,10 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+[data-theme="dark"] .overlay-title {
+  color: var(--text-primary);
 }
 
 .overlay-title-ornament {
@@ -93,6 +122,10 @@
   line-height: 1.45;
 }
 
+[data-theme="dark"] .overlay-content {
+  color: var(--text-secondary);
+}
+
 .overlay-actions {
   display: flex;
   justify-content: flex-end;
@@ -102,61 +135,154 @@
 
 
 
+
 .overlay-card--success .overlay-head {
   background: linear-gradient(
-    90deg,
-    rgba(34, 197, 94, 0.12),
-    rgba(34, 197, 94, 0.05)
+    135deg,
+    rgba(0, 255, 136, 0.25),
+    rgba(0, 204, 106, 0.15)
   );
-  border-bottom: 1px solid rgba(34, 197, 94, 0.18);
+  border-bottom: 1px solid rgba(0, 255, 136, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 255, 136, 0.2);
+}
+
+[data-theme="dark"] .overlay-card--success .overlay-head {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 255, 136, 0.18),
+    rgba(0, 204, 106, 0.10)
+  );
+  border-bottom: 1px solid rgba(0, 255, 136, 0.35);
+  box-shadow: 
+    0 4px 24px rgba(0, 255, 136, 0.25),
+    0 0 40px rgba(0, 255, 136, 0.15);
 }
 
 .overlay-card--success .overlay-icon {
-  background: rgba(34, 197, 94, 0.14);
-  color: #16a34a;
+  background: rgba(0, 255, 136, 0.20);
+  color: #00ff88;
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.4);
 }
+
+[data-theme="dark"] .overlay-card--success .overlay-icon {
+  background: rgba(0, 255, 136, 0.15);
+  color: #00ff88;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 136, 0.5),
+    0 0 40px rgba(0, 255, 136, 0.25);
+}
+
 
 .overlay-card--error .overlay-head {
   background: linear-gradient(
-    90deg,
-    rgba(239, 68, 68, 0.12),
-    rgba(239, 68, 68, 0.05)
+    135deg,
+    rgba(255, 0, 85, 0.25),
+    rgba(255, 51, 119, 0.15)
   );
-  border-bottom: 1px solid rgba(239, 68, 68, 0.18);
+  border-bottom: 1px solid rgba(255, 0, 85, 0.4);
+  box-shadow: 0 4px 20px rgba(255, 0, 85, 0.2);
+}
+
+[data-theme="dark"] .overlay-card--error .overlay-head {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 0, 102, 0.18),
+    rgba(255, 51, 119, 0.10)
+  );
+  border-bottom: 1px solid rgba(255, 0, 102, 0.35);
+  box-shadow: 
+    0 4px 24px rgba(255, 0, 102, 0.25),
+    0 0 40px rgba(255, 0, 102, 0.15);
 }
 
 .overlay-card--error .overlay-icon {
-  background: rgba(239, 68, 68, 0.14);
-  color: #ef4444;
+  background: rgba(255, 0, 85, 0.20);
+  color: #ff0055;
+  box-shadow: 0 0 16px rgba(255, 0, 85, 0.4);
 }
+
+[data-theme="dark"] .overlay-card--error .overlay-icon {
+  background: rgba(255, 0, 102, 0.15);
+  color: #ff0066;
+  box-shadow: 
+    0 0 20px rgba(255, 0, 102, 0.5),
+    0 0 40px rgba(255, 0, 102, 0.25);
+}
+
 
 .overlay-card--warning .overlay-head {
   background: linear-gradient(
-    90deg,
-    rgba(245, 158, 11, 0.14),
-    rgba(245, 158, 11, 0.06)
+    135deg,
+    rgba(204, 0, 255, 0.22),
+    rgba(255, 0, 255, 0.12)
   );
-  border-bottom: 1px solid rgba(245, 158, 11, 0.20);
+  border-bottom: 1px solid rgba(204, 0, 255, 0.38);
+  box-shadow: 0 4px 20px rgba(204, 0, 255, 0.2);
+}
+
+[data-theme="dark"] .overlay-card--warning .overlay-head {
+  background: linear-gradient(
+    135deg,
+    rgba(221, 51, 255, 0.18),
+    rgba(255, 0, 255, 0.10)
+  );
+  border-bottom: 1px solid rgba(221, 51, 255, 0.35);
+  box-shadow: 
+    0 4px 24px rgba(221, 51, 255, 0.25),
+    0 0 40px rgba(221, 51, 255, 0.15);
 }
 
 .overlay-card--warning .overlay-icon {
-  background: rgba(245, 158, 11, 0.14);
-  color: #f59e0b;
+  background: rgba(204, 0, 255, 0.18);
+  color: #cc00ff;
+  box-shadow: 0 0 16px rgba(204, 0, 255, 0.4);
 }
+
+[data-theme="dark"] .overlay-card--warning .overlay-icon {
+  background: rgba(221, 51, 255, 0.15);
+  color: #dd33ff;
+  box-shadow: 
+    0 0 20px rgba(221, 51, 255, 0.5),
+    0 0 40px rgba(221, 51, 255, 0.25);
+}
+
 
 .overlay-card--info .overlay-head {
   background: linear-gradient(
-    90deg,
-    rgba(105, 114, 171, 0.14),
-    rgba(105, 114, 171, 0.06)
+    135deg,
+    rgba(0, 204, 255, 0.22),
+    rgba(0, 153, 255, 0.12)
   );
-  border-bottom: 1px solid rgba(105, 114, 171, 0.20);
+  border-bottom: 1px solid rgba(0, 204, 255, 0.38);
+  box-shadow: 0 4px 20px rgba(0, 204, 255, 0.2);
+}
+
+[data-theme="dark"] .overlay-card--info .overlay-head {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 221, 255, 0.18),
+    rgba(0, 153, 255, 0.10)
+  );
+  border-bottom: 1px solid rgba(0, 221, 255, 0.35);
+  box-shadow: 
+    0 4px 24px rgba(0, 221, 255, 0.25),
+    0 0 40px rgba(0, 221, 255, 0.15);
 }
 
 .overlay-card--info .overlay-icon {
-  background: rgba(105, 114, 171, 0.14);
-  color: #6972ab;
+  background: rgba(0, 204, 255, 0.18);
+  color: #00ccff;
+  box-shadow: 0 0 16px rgba(0, 204, 255, 0.4);
 }
+
+[data-theme="dark"] .overlay-card--info .overlay-icon {
+  background: rgba(0, 221, 255, 0.15);
+  color: #00ddff;
+  box-shadow: 
+    0 0 20px rgba(0, 221, 255, 0.5),
+    0 0 40px rgba(0, 221, 255, 0.25);
+}
+
 
 .overlay-head.overlay-head--centered {
   display: grid;
@@ -217,3 +343,12 @@
   padding: 14px 16px 16px;
 }
 
+
+.overlay-product-info {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="dark"] .overlay-product-info {
+  color: rgba(255, 255, 255, 0.9);
+}

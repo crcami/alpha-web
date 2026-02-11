@@ -537,7 +537,6 @@ button, input, select {
   gap: 10px;
 }
 
-/* Responsive Styles */
 @media (max-width: 968px) {
   .mobile-menu-toggle {
     display: flex;
@@ -576,17 +575,20 @@ button, input, select {
     min-width: auto;
   }
 
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile específico para tabelas */
+@media (max-width: 650px) {
   .table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: visible !important;
   }
 
   .table {
-    min-width: 600px;
-  }
-
-  .grid2 {
-    grid-template-columns: 1fr;
+    width: 100%;
+    min-width: auto !important;
   }
 }
 
@@ -610,3 +612,4 @@ button, input, select {
     font-size: 13px;
   }
 }
+

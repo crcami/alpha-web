@@ -4,12 +4,14 @@ import { AlertTriangle, Eye, Pencil, Trash2, X, Plus } from "lucide-react";
 
 import { productsApi } from "../api/productsApi";
 import { rawMaterialsApi } from "../api/rawMaterialsApi";
-import type { Product, ProductBomItem, RawMaterial } from "../types/models";
+import { unitsOfMeasureApi } from "../api/unitsOfMeasureApi";
+import type { Product, RawMaterial, UnitOfMeasure } from "../types/models";
 
 import { OverlayCard } from "../components/OverlayCard";
 
 import "../css/ProductsModal.css";
 import "../css/ProductsPage.css";
+import "../css/ThemePages.css";
 
 type ModalMode = "create" | "edit" | "view";
 
@@ -18,7 +20,12 @@ type Draft = {
   code: string;
   name: string;
   unitValue: number | null;
-  bom: ProductBomItem[];
+  unitOfMeasure: string;
+  bom: {
+    rawMaterialId: string;
+    rawMaterialName?: string;
+    quantityRequired: number;
+  }[];
 };
 
 type OverlayState =
@@ -35,7 +42,6 @@ type OverlayState =
 
 type SortOption = "name-asc" | "name-desc" | "value-asc" | "value-desc";
 
-/** Formats BRL-style money with 2 decimals. */
 function formatMoney(value: number): string {
   return value.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
@@ -43,12 +49,10 @@ function formatMoney(value: number): string {
   });
 }
 
-/** Normalizes IDs to string to avoid string/number mismatch. */
 function toId(value: unknown): string {
   return String(value ?? "");
 }
 
-/** Coerces any input number into a valid integer quantity (>= 1). */
 function toPositiveInt(value: unknown): number {
   const n =
     typeof value === "number"
@@ -63,10 +67,10 @@ function toPositiveInt(value: unknown): number {
   return int < 1 ? 1 : int;
 }
 
-/** Renders the products page. */
 export function ProductsPage() {
   const [items, setItems] = useState<Product[]>([]);
   const [materials, setMaterials] = useState<RawMaterial[]>([]);
+  const [unitsOfMeasure, setUnitsOfMeasure] = useState<UnitOfMeasure[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortOption, setSortOption] = useState<SortOption>("name-asc");
 
@@ -80,6 +84,7 @@ export function ProductsPage() {
     code: "",
     name: "",
     unitValue: null,
+    unitOfMeasure: "un",
     bom: [],
   });
 
@@ -120,12 +125,14 @@ export function ProductsPage() {
     setError(null);
 
     try {
-      const [p, r] = await Promise.all([
+      const [p, r, u] = await Promise.all([
         productsApi.list(),
         rawMaterialsApi.list(),
+        unitsOfMeasureApi.list(),
       ]);
       setItems(p);
       setMaterials(r);
+      setUnitsOfMeasure(u);
     } catch {
       setError("Não foi possível carregar os produtos.");
     } finally {
@@ -144,45 +151,83 @@ export function ProductsPage() {
   function openCreate() {
     setError(null);
     setModalMode("create");
-    setDraft({ code: "", name: "", unitValue: null, bom: [] });
-    setSelectedMaterialId("");
-    setModalOpen(true);
-  }
-
-  function openEdit(p: Product) {
-    setError(null);
-    setModalMode("edit");
     setDraft({
-      id: p.id,
-      code: p.code ?? "",
-      name: p.name ?? "",
-      unitValue: Number.isFinite(p.unitValue) ? p.unitValue : null,
-      bom: (p.bom ?? []).map((b) => ({
-        ...b,
-        rawMaterialId: toId(b.rawMaterialId),
-        quantityNeeded: toPositiveInt(b.quantityNeeded),
-      })),
+      code: "",
+      name: "",
+      unitValue: null,
+      unitOfMeasure: "un",
+      bom: [],
     });
     setSelectedMaterialId("");
     setModalOpen(true);
   }
 
-  function openView(p: Product) {
+  async function openEdit(p: Product) {
     setError(null);
-    setModalMode("view");
-    setDraft({
-      id: p.id,
-      code: p.code ?? "",
-      name: p.name ?? "",
-      unitValue: Number.isFinite(p.unitValue) ? p.unitValue : null,
-      bom: (p.bom ?? []).map((b) => ({
-        ...b,
-        rawMaterialId: toId(b.rawMaterialId),
-        quantityNeeded: toPositiveInt(b.quantityNeeded),
-      })),
-    });
-    setSelectedMaterialId("");
-    setModalOpen(true);
+    setLoading(true);
+    try {
+      const materials = await productsApi.getMaterials(p.id);
+
+      setModalMode("edit");
+      setDraft({
+        id: p.id,
+        code: p.code ?? "",
+        name: p.name ?? "",
+        unitValue: Number.isFinite(p.unitValue) ? p.unitValue : null,
+        unitOfMeasure: p.unitOfMeasure || "un",
+        bom: materials.map((b) => ({
+          rawMaterialId: toId(b.rawMaterialId),
+          rawMaterialName: b.rawMaterialName,
+          quantityRequired: Number.isFinite(b.quantityRequired)
+            ? b.quantityRequired
+            : 1,
+        })),
+      });
+      setSelectedMaterialId("");
+      setModalOpen(true);
+    } catch {
+      setOverlay({
+        kind: "error",
+        title: "Erro",
+        message: "Não foi possível carregar os materiais do produto.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function openView(p: Product) {
+    setError(null);
+    setLoading(true);
+    try {
+      const materials = await productsApi.getMaterials(p.id);
+
+      setModalMode("view");
+      setDraft({
+        id: p.id,
+        code: p.code ?? "",
+        name: p.name ?? "",
+        unitValue: Number.isFinite(p.unitValue) ? p.unitValue : null,
+        unitOfMeasure: p.unitOfMeasure || "un",
+        bom: materials.map((b) => ({
+          rawMaterialId: toId(b.rawMaterialId),
+          rawMaterialName: b.rawMaterialName,
+          quantityRequired: Number.isFinite(b.quantityRequired)
+            ? b.quantityRequired
+            : 1,
+        })),
+      });
+      setSelectedMaterialId("");
+      setModalOpen(true);
+    } catch {
+      setOverlay({
+        kind: "error",
+        title: "Erro",
+        message: "Não foi possível carregar os materiais do produto.",
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   function addBomItem(rawMaterialId: string) {
@@ -196,7 +241,7 @@ export function ProductsPage() {
 
       return {
         ...d,
-        bom: [...d.bom, { rawMaterialId: id, quantityNeeded: 1 }],
+        bom: [...d.bom, { rawMaterialId: id, quantityRequired: 1 }],
       };
     });
 
@@ -212,7 +257,7 @@ export function ProductsPage() {
     setDraft((d) => ({
       ...d,
       bom: d.bom.map((b) =>
-        toId(b.rawMaterialId) === id ? { ...b, quantityNeeded: nextQty } : b,
+        toId(b.rawMaterialId) === id ? { ...b, quantityRequired: nextQty } : b,
       ),
     }));
   }
@@ -253,31 +298,37 @@ export function ProductsPage() {
       return;
     }
 
-    if (draft.bom.length === 0) {
-      setError("Adicione ao menos uma matéria-prima na receita do produto.");
-      return;
-    }
-
-    const normalizedBom: ProductBomItem[] = draft.bom.map((b) => ({
-      ...b,
-      rawMaterialId: toId(b.rawMaterialId),
-      quantityNeeded: toPositiveInt(b.quantityNeeded),
-    }));
-
     const payload = {
       code,
       name,
       unitValue: draft.unitValue,
-      bom: normalizedBom,
+      unitOfMeasure: draft.unitOfMeasure,
     };
 
     try {
-      if (draft.id) {
-        await productsApi.update(draft.id, payload);
+      let productId = draft.id;
+
+      if (productId) {
+        await productsApi.update(productId, payload);
       } else {
-        await productsApi.create(payload);
+        const created = await productsApi.create(payload);
+        productId = toId(created.id);
       }
 
+      // Agora salva os materiais (BOM)
+      if (productId) {
+        const materialsPayload = draft.bom.map((b) => ({
+          rawMaterialId: Number(b.rawMaterialId),
+          quantityRequired: b.quantityRequired,
+        }));
+        await productsApi.updateMaterials(productId, materialsPayload);
+      }
+
+      setOverlay({
+        kind: "success",
+        title: "Sucesso",
+        message: "Produto salvo com sucesso!",
+      });
       closeModal();
       await load();
 
@@ -323,7 +374,7 @@ export function ProductsPage() {
   return (
     <section className="page products-page">
       <div className="page-head">
-        <h1>Produtos</h1>
+        <h1>Gerenciar Produtos</h1>
         <button
           className="btn primary btn-solid"
           onClick={openCreate}
@@ -372,15 +423,15 @@ export function ProductsPage() {
               <tbody>
                 {sortedItems.map((p) => (
                   <tr key={p.id}>
-                    <td>{p.code}</td>
-                    <td>{p.name}</td>
-                    <td>
+                    <td data-label="Código">{p.code}</td>
+                    <td data-label="Nome">{p.name}</td>
+                    <td data-label="Valor unitário">
                       {Number.isFinite(p.unitValue)
                         ? formatMoney(p.unitValue)
                         : "0,00"}
                     </td>
 
-                    <td className="right">
+                    <td className="right" data-label="Ações">
                       <div className="row-actions">
                         <button
                           className="icon-btn"
@@ -497,6 +548,27 @@ export function ProductsPage() {
                   className="modal-input"
                 />
               </div>
+
+              <div className="field">
+                <label>Unidade de medida</label>
+                <select
+                  value={draft.unitOfMeasure}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, unitOfMeasure: e.target.value }))
+                  }
+                  disabled={isReadOnly}
+                >
+                  {unitsOfMeasure.length === 0 ? (
+                    <option value="">Carregando...</option>
+                  ) : (
+                    unitsOfMeasure.map((unit) => (
+                      <option key={unit.id} value={unit.code}>
+                        {unit.name} ({unit.code})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
             </div>
 
             <div className="divider" />
@@ -538,6 +610,7 @@ export function ProductsPage() {
                 <div className="bom-header" aria-hidden="true">
                   <div className="bom-col bom-col--material">Matéria-prima</div>
                   <div className="bom-col bom-col--qty">Qtd. p/ 1 un.</div>
+                  <div className="bom-col bom-col--unit">Unidade</div>
                   <div className="bom-col bom-col--actions" />
                 </div>
 
@@ -562,7 +635,7 @@ export function ProductsPage() {
                           min={1}
                           step={1}
                           inputMode="numeric"
-                          value={toPositiveInt(b.quantityNeeded)}
+                          value={toPositiveInt(b.quantityRequired)}
                           onChange={(e) =>
                             updateBomQty(
                               b.rawMaterialId,
@@ -573,6 +646,14 @@ export function ProductsPage() {
                           readOnly={isReadOnly}
                           aria-label="Quantidade por unidade"
                         />
+                      </div>
+
+                      <div className="bom-col bom-col--unit">
+                        <span className="unit-badge">
+                          {materials
+                            .find((m) => toId(m.id) === b.rawMaterialId)
+                            ?.unitOfMeasure?.toUpperCase() || "UN"}
+                        </span>
                       </div>
 
                       <div className="bom-col bom-col--actions">
@@ -643,7 +724,7 @@ export function ProductsPage() {
                 essa ação?
               </p>
 
-              <p style={{ margin: 0, color: "rgba(0,0,0,0.75)" }}>
+              <p className="overlay-product-info">
                 <strong>Produto:</strong> {overlay.product.code} —{" "}
                 {overlay.product.name}
               </p>

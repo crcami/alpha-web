@@ -6,6 +6,7 @@ import { ResetPasswordPage } from "../pages/ResetPasswordPage";
 import { DashboardLayout } from "../pages/DashboardLayout";
 import { ProductsPage } from "../pages/ProductsPage";
 import { RawMaterialsPage } from "../pages/RawMaterialsPage";
+import { UnitsOfMeasurePage } from "../pages/UnitsOfMeasurePage";
 import { ProductionPage } from "../pages/ProductionPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import { NotFoundPage } from "../pages/NotFoundPage";
@@ -29,6 +30,7 @@ export function AppRouter() {
           <Route index element={<Navigate to="/app/products" replace />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="raw-materials" element={<RawMaterialsPage />} />
+          <Route path="units-of-measure" element={<UnitsOfMeasurePage />} />
           <Route path="production" element={<ProductionPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>

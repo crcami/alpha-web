@@ -1,7 +1,13 @@
+export type UnitOfMeasure = {
+  id: string;
+  code: string;
+  name: string;
+};
+
 export type ProductBomItem = {
   rawMaterialId: string;
   rawMaterialName?: string;
-  quantityNeeded: number;
+  quantityRequired: number;
 };
 
 export type Product = {
@@ -9,6 +15,7 @@ export type Product = {
   code: string;
   name: string;
   unitValue: number;
+  unitOfMeasure?: string;
   bom?: ProductBomItem[];
 };
 
@@ -17,12 +24,14 @@ export type RawMaterial = {
   code: string;
   name: string;
   stockQuantity: number;
+  unitOfMeasure: string;
 };
 
 export type ProductCreateRequest = {
   code?: string;
   name: string;
   unitValue: number;
+  unitOfMeasure?: string;
   bom: ProductBomItem[];
 };
 
@@ -32,6 +41,7 @@ export type RawMaterialCreateRequest = {
   code?: string;
   name: string;
   stockQuantity: number;
+  unitOfMeasure: string;
 };
 
 export type RawMaterialUpdateRequest = RawMaterialCreateRequest;
@@ -43,4 +53,5 @@ export type ProductionSuggestion = {
   quantity: number;
   unitValue: number;
   totalValue: number;
+  unitOfMeasure?: string;
 };

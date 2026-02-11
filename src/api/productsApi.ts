@@ -1,19 +1,12 @@
 import { apiRequest } from "./http";
-import type { ProductBomItem } from "../types/models";
-
-export type Product = {
-  id: string;
-  code: string;
-  name: string;
-  unitValue: number;
-  bom?: ProductBomItem[];
-};
+import type { Product, ProductBomItem } from "../types/models";
 
 type ProductApi = {
   id: string;
   code: string;
   name: string;
   value: number;
+  unitOfMeasure?: string;
   bom?: ProductBomItem[];
 };
 
@@ -21,14 +14,14 @@ export type ProductCreateRequest = {
   code: string;
   name: string;
   unitValue: number;
-  bom: ProductBomItem[];
+  unitOfMeasure: string;
 };
 
 type ProductCreateApiRequest = {
   code: string;
   name: string;
   value: number;
-  bom: ProductBomItem[];
+  unitOfMeasure: string;
 };
 
 function mapFromApi(p: ProductApi): Product {
@@ -37,6 +30,7 @@ function mapFromApi(p: ProductApi): Product {
     code: p.code,
     name: p.name,
     unitValue: p.value,
+    unitOfMeasure: p.unitOfMeasure,
     bom: p.bom ?? [],
   };
 }
@@ -46,7 +40,7 @@ function mapToApi(req: ProductCreateRequest): ProductCreateApiRequest {
     code: req.code,
     name: req.name,
     value: req.unitValue,
-    bom: req.bom,
+    unitOfMeasure: req.unitOfMeasure,
   };
 }
 
@@ -56,11 +50,24 @@ export const productsApi = {
     return res.map(mapFromApi);
   },
 
+  async get(id: string): Promise<Product> {
+    const res = await apiRequest<ProductApi>(`/products/${id}`, "GET");
+    return mapFromApi(res);
+  },
+
   create: (req: ProductCreateRequest) =>
-    apiRequest<void>("/products", "POST", mapToApi(req)),
+    apiRequest<ProductApi>("/products", "POST", mapToApi(req)),
 
   update: (id: string, req: ProductCreateRequest) =>
-    apiRequest<void>(`/products/${id}`, "PUT", mapToApi(req)),
+    apiRequest<ProductApi>(`/products/${id}`, "PUT", mapToApi(req)),
 
   remove: (id: string) => apiRequest<void>(`/products/${id}`, "DELETE"),
+
+  getMaterials: (id: string) =>
+    apiRequest<ProductBomItem[]>(`/products/${id}/materials`, "GET"),
+
+  updateMaterials: (
+    id: string,
+    materials: { rawMaterialId: number; quantityRequired: number }[],
+  ) => apiRequest<ProductBomItem[]>(`/products/${id}/materials`, "PUT", materials),
 };
